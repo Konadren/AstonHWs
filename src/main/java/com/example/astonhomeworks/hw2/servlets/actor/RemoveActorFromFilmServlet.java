@@ -9,21 +9,21 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet("/deleteActor")
-public class DeleteActorServlet extends HttpServlet {
+@WebServlet("/removeActor")
+public class RemoveActorFromFilmServlet extends HttpServlet {
 
     private ActorDAO actorDAO = new ActorDAO();
 
-    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        int actorId = Integer.parseInt(req.getParameter("id"));
+        int movieId = Integer.parseInt(req.getParameter("movieId"));
+        int actorId = Integer.parseInt(req.getParameter("actorId"));
 
         try {
-            actorDAO.deleteActor(actorId);
-            resp.sendRedirect("actors"); // Редирект на список всех режиссеров после удаления
+            actorDAO.removeActorFromMovie(actorId, movieId);
+            resp.sendRedirect("movieDetails?id=" + movieId);
         } catch (Exception e) {
             throw new ServletException(e);
         }
-    }
 
+    }
 }

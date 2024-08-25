@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet("/actors")
@@ -17,12 +16,12 @@ public class ActorsServlet extends HttpServlet {
 
     private ActorDAO actorDAO = new ActorDAO();
 
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         try {
-            List<Actor> actors = actorDAO.getAllActors();
+            List<Actor> actors = actorDAO.getActors();
             req.setAttribute("actors", actors);
             req.getRequestDispatcher("actors.jsp").forward(req, resp);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }
@@ -39,7 +38,7 @@ public class ActorsServlet extends HttpServlet {
         try {
             actorDAO.addActor(actor);
             resp.sendRedirect("actors");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
 

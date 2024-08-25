@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet("/actorDetails")
@@ -32,7 +31,7 @@ public class ActorDetailsServlet extends HttpServlet {
 
             req.getRequestDispatcher("/actorDetails.jsp").forward(req, resp);
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException("Error retrieving actor details", e);
         }
     }
@@ -52,7 +51,7 @@ public class ActorDetailsServlet extends HttpServlet {
         try {
             actorDAO.updateActor(actor);
             resp.sendRedirect("actorDetails?id=" + id);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException("Database error", e);
         }
     }

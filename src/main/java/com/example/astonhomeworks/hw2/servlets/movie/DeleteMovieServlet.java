@@ -22,7 +22,7 @@ public class DeleteMovieServlet extends HttpServlet {
         try {
             movieDAO.deleteMovie(movieId);
             resp.sendRedirect("movies");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
 

@@ -4,103 +4,158 @@ package com.example.astonhomeworks.hw2.dao;
 import com.example.astonhomeworks.hw2.models.Movie;
 import com.example.astonhomeworks.hw2.models.Actor;
 import com.example.astonhomeworks.hw2.util.DatabaseUtil;
-import java.sql.*;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class ActorDAO {
 
-    public List<Actor> getAllActors() throws SQLException {
-        String query = "SELECT * FROM Actor";
-        List<Actor> actors = new ArrayList<>();
+    public List<Actor> getActors() {
+        List<Actor> actors = null;
+        Transaction transaction;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-            while (rs.next()) {
-                Actor actor = new Actor();
+        try (Session session = DatabaseUtil.getSession()){
+            transaction = session.beginTransaction();
 
-                actor.setId(rs.getInt("id"));
-                actor.setName(rs.getString("name"));
-                actor.setAge(rs.getInt("age"));
+            actors = session.createQuery("FROM Actor", Actor.class).list();
 
-                actors.add(actor);
-            }
+            transaction.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
         return actors;
     }
 
-    public void addActor(Actor actor) throws SQLException {
-        String query = "INSERT INTO Actor (name, age) VALUES (?, ?)";
+    public void addActor(Actor actor) {
+        Transaction transaction = null;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setString(1, actor.getName());
-            pstmt.setInt(2, actor.getAge());
-            pstmt.executeUpdate();
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            session.persist(actor);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 
-    public Actor getActorById(int id) throws SQLException {
-        String query = "SELECT * FROM Actor WHERE id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return new Actor(rs.getInt("id"), rs.getString("name"), rs.getInt("age"));
+    public Actor getActorById(int id) {
+        Transaction transaction = null;
+        Actor actor = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            actor = session.get(Actor.class, id);
+            if (actor  == null) throw new NoSuchElementException("Актера с айди = " + id + " не существует в БД");
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
+        }
+
+        return actor;
+    }
+
+    public void updateActor(Actor actor) {
+        Transaction transaction = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            Actor actorFromDatabase = session.get(Actor.class, actor.getId());
+
+            // если не будет этой конструкции, то актер обновится, но удалится из actor_movie
+            // наверное дело в том, что у actor, поступаемого в метод, не сеттается его movies (=null)
+            // ну и код факапится
+            if (actor.getMovies() == null) {
+                actor.setMovies(actorFromDatabase.getMovies()); // а здесь костыльно мы стягиваем из БД фильмы актера
+            } else {
+                actor.getMovies().addAll(actorFromDatabase.getMovies());
             }
-            return null;
+
+            session.merge(actor);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 
-    public void updateActor(Actor actor) throws SQLException {
-        String query = "UPDATE Actor SET name = ?, age = ? WHERE id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setString(1, actor.getName());
-            pstmt.setInt(2, actor.getAge());
-            pstmt.setInt(3, actor.getId());
-            pstmt.executeUpdate();
+    public void deleteActor(int id) {
+        Transaction transaction = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            Actor actor = session.get(Actor.class, id);
+            if (actor == null) throw new NoSuchElementException("Актёра с айди = " + id + " нет в БД");
+
+            session.remove(actor);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 
-    public void deleteActor(int id) throws SQLException {
-        String query = "DELETE FROM Actor WHERE id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setInt(1, id);
-            pstmt.executeUpdate();
+    public List<Movie> getMoviesByActorId(int actorId) {
+        Transaction transaction = null;
+        List<Movie> movies = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            String hqlQuery = "SELECT m FROM Movie m JOIN m.actors a WHERE a.id = :actorId";
+            Query<Movie> query = session.createQuery(hqlQuery, Movie.class);
+            query.setParameter("actorId", actorId);
+
+            movies = query.getResultList();
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
+
+        return movies;
     }
 
-    public List<Movie> getMoviesByActorId(int actorId) throws SQLException {
-        String query = "SELECT m.* FROM Movie m JOIN Actor_Movie am ON m.id = am.movie_id WHERE am.actor_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setInt(1, actorId);
-            ResultSet rs = pstmt.executeQuery();
-            List<Movie> movies = new ArrayList<>();
-            while (rs.next()) {
-                Movie movie = new Movie(
-                        rs.getString("name"),
-                        rs.getInt("releaseYear"),
-                        rs.getInt("id"),
-                        rs.getInt("director_id"));
-                movies.add(movie);
+    public void removeActorFromMovie(int actorId, int movieId) {
+        Transaction transaction = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            Movie movie = session.get(Movie.class, movieId);
+            Actor actor = session.get(Actor.class, actorId);
+
+            if (movie == null) {
+                throw new RuntimeException("Фильма с айди = " + movieId + " не существует в БД.");
             }
-            return movies;
-        }
-    }
+            if (actor == null) {
+                throw new RuntimeException("Актера с айди =  " + actorId + " не существует в БД.");
+            }
 
-    public void removeActorFromMovie(int actorId, int movieId) throws SQLException {
-        String query = "DELETE FROM actor_movie WHERE actor_id = ? AND movie_id = ?";
+            movie.getActors().remove(actor);
+            actor.getMovies().remove(movie);
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setInt(1, actorId);
-            pstmt.setInt(2, movieId);
-            pstmt.executeUpdate();
+            session.merge(movie);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 }

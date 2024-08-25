@@ -3,124 +3,148 @@ package com.example.astonhomeworks.hw2.dao;
 import com.example.astonhomeworks.hw2.models.Director;
 import com.example.astonhomeworks.hw2.models.Movie;
 import com.example.astonhomeworks.hw2.util.DatabaseUtil;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class DirectorDAO {
-    public List<Movie> getAllDirectorMovies(int id) throws SQLException {
-        List<Movie> movies = new ArrayList<>();
-        String query = "SELECT * FROM Movie WHERE director_id = ?";
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+    public List<Movie> getAllDirectorMovies(int id) {
 
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
+        List<Movie> movies = null;
+        Transaction transaction = null;
 
-            while (rs.next()) {
-                Movie movie = new Movie();
-                movie.setId(rs.getInt("id"));
-                movie.setName(rs.getString("name"));
-                movie.setReleaseYear(rs.getInt("releaseYear"));
-                movie.setOwner(rs.getInt("director_id"));
-                movies.add(movie);
-            }
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            Query<Movie> query = session.createQuery(
+                    "SELECT m FROM Movie m JOIN FETCH m.owner WHERE m.owner.id = :id", Movie.class);
+            query.setParameter("id", id);
+
+            movies = query.getResultList();
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
+
+        // Если заместо JOIN FETCH в запросе напишем  "FROM Movie WHERE owner.id = :id", то
+        // вот тут попадаемся на ошибку LazyInitializationException (пришлось прописать FetchType.Lazy в Director и Movie)
+        for (Movie movie: movies) {
+            System.out.println(movie.getOwner().getName()); // всё прекрасно в консоли выводится
+        }
+
 
         return movies;
     }
 
-    public void addMovieToDirector(Movie movie, int directorId) throws SQLException {
-        String query = "INSERT INTO Movie(name, releaseYear, director_id) VALUES (?, ?, ?)";
+    public void addMovieToDirector(Movie movie, int directorId)  {
 
-        try (Connection conn = DatabaseUtil.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(query)) {
+        Transaction transaction = null;
 
-            pstmt.setString(1, movie.getName());
-            pstmt.setInt(2, movie.getReleaseYear());
-            pstmt.setInt(3, directorId);
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
 
-            pstmt.executeUpdate();
+            Director director = session.get(Director.class, directorId);
+            if (director == null) throw new NoSuchElementException("Режиссёра с айди = " + directorId + " нет");
+
+            movie.setOwner(director);
+            session.persist(movie);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
+
     }
 
-    public List<Director> getDirectors() throws SQLException {
-        List<Director> directors = new ArrayList<>();
-        String query = "SELECT * FROM Director";
+    public List<Director> getDirectors() {
+        Transaction transaction = null;
+        List<Director> directors = null;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(query)) {
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
 
-            while (rs.next()) {
-                Director director = new Director();
-                director.setId(rs.getInt("id"));
-                director.setName(rs.getString("name"));
-                director.setAge(rs.getInt("age"));
+            directors = session.createQuery("FROM Director", Director.class).list();
 
-                directors.add(director);
-            }
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
+
         return directors;
     }
 
-    public void addDirector(Director director) throws SQLException {
-        String query = "INSERT INTO Director (name, age) VALUES (?, ?)";
+    public void addDirector(Director director) {
+        Transaction transaction = null;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
 
-            pstmt.setString(1, director.getName());
-            pstmt.setInt(2, director.getAge());
+            session.persist(director);
 
-            pstmt.executeUpdate();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 
-    public void updateDirector(Director director) throws SQLException {
-        String query = "UPDATE Director SET name = ?, age = ? WHERE id = ?";
+    public void updateDirector(Director director) {
+        Transaction transaction = null;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
 
-            pstmt.setString(1, director.getName());
-            pstmt.setInt(2, director.getAge());
-            pstmt.setInt(3, director.getId());
+            session.merge(director);
 
-            pstmt.executeUpdate();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 
-    public Director getDirectorById(int id) throws SQLException {
-        String query = "SELECT * FROM Director WHERE id = ?";
-        Director director = new Director();
+    public Director getDirectorById(int id) {
+        Transaction transaction = null;
+        Director director = null;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setInt(1, id);
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
 
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    director.setId(rs.getInt("id"));
-                    director.setName(rs.getString("name"));
-                    director.setAge(rs.getInt("age"));
-                }
-            } catch (SQLException e) {
-                throw new SQLException(e);
-            }
+            director = session.get(Director.class, id);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
+
         return director;
     }
 
-    public void deleteDirector(int directorId) throws SQLException {
-        String query = "DELETE FROM Director WHERE id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(query)) {
+    public void deleteDirector(int directorId)  {
+        Transaction transaction = null;
 
-            pstmt.setInt(1, directorId);
-            pstmt.executeUpdate();
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            Director director = session.get(Director.class, directorId);
+            if (director == null) throw new NoSuchElementException("Режиссёра с айди = " + directorId + " нет");
+
+            session.remove(director);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 

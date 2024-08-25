@@ -10,14 +10,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet("/directorDetails")
 public class DirectorDetailsServlet extends HttpServlet {
-    private DirectorDAO directorDAO = new DirectorDAO();
+    private final DirectorDAO directorDAO = new DirectorDAO();
 
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         String directorIdStr = req.getParameter("id");
         int directorId = Integer.parseInt(directorIdStr);
 
@@ -28,7 +27,7 @@ public class DirectorDetailsServlet extends HttpServlet {
             req.setAttribute("movies", movies);
             req.setAttribute("directorId", directorId);
             req.getRequestDispatcher("director-details.jsp").forward(req, resp);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }
@@ -40,14 +39,18 @@ public class DirectorDetailsServlet extends HttpServlet {
         int releaseYear = Integer.parseInt(req.getParameter("releaseYear"));
 
         Movie movie = new Movie();
+        Director director = directorDAO.getDirectorById(directorId);
+
         movie.setName(name);
         movie.setReleaseYear(releaseYear);
-        movie.setOwner(directorId);
+
+        // варианты: сделать movieDAO и там получать фильм
+        movie.setOwner(director);
 
         try {
             directorDAO.addMovieToDirector(movie, directorId);
             resp.sendRedirect("directorDetails?id=" + directorId);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException("Database error", e);
         }
     }

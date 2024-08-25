@@ -1,22 +1,33 @@
 package com.example.astonhomeworks.hw2.models;
 
+import jakarta.persistence.*;
+
 import java.util.List;
 
+@Entity
+@Table(name = "Director")
 public class Director {
 
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "age")
     private Integer age;
+
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<Movie> movieList;
 
     public Director() {
     }
 
-    public Director(int id, String name, Integer age, List<Movie> movieList) {
-        this.id = id;
+    public Director(String name, Integer age) {
         this.name = name;
         this.age = age;
-        this.movieList = movieList;
     }
 
     public List<Movie> getMovieList() {

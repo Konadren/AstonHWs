@@ -27,7 +27,7 @@ public class MovieDetailsServlet extends HttpServlet {
 
         try {
             List<Actor> actorsInMovie = movieDAO.getActorsByMovieId(movieId);
-            List<Actor> allActors = actorDAO.getAllActors();
+            List<Actor> allActors = actorDAO.getActors();
 
             req.setAttribute("actorsInMovie", actorsInMovie);
             req.setAttribute("allActors", allActors);
@@ -35,7 +35,7 @@ public class MovieDetailsServlet extends HttpServlet {
             Movie movie = movieDAO.getMovieById(movieId);
             req.setAttribute("movie", movie);
             req.getRequestDispatcher("movie-details.jsp").forward(req, resp);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }
@@ -49,7 +49,7 @@ public class MovieDetailsServlet extends HttpServlet {
             movieDAO.addActorToMovie(actorId, movieId);
             resp.sendRedirect("movieDetails?id=" + movieId);
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException("Error adding actor to movie", e);
         }
     }

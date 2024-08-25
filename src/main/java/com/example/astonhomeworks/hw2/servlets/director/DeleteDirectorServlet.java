@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.SQLException;
 
 @WebServlet("/deleteDirector")
 public class DeleteDirectorServlet extends HttpServlet {
@@ -22,7 +21,7 @@ public class DeleteDirectorServlet extends HttpServlet {
         try {
             directorDAO.deleteDirector(directorId);
             resp.sendRedirect("directors"); // Редирект на список всех режиссеров после удаления
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }

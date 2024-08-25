@@ -7,6 +7,12 @@
 <body>
 <h1>Movie Details</h1>
 
+
+<form method="post" action="deleteMovie">
+    <input type="hidden" name="id" value="${movie.id}"/>
+    <button type="submit">Delete Movie</button>
+</form>
+
 <form method="post" action="updateMovie">
     <input type="hidden" name="id" value="${movie.id}"/>
     <label>

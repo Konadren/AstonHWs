@@ -1,20 +1,37 @@
 package com.example.astonhomeworks.hw2.models;
 
+import jakarta.persistence.*;
+
+import java.util.List;
+import java.util.Set;
+
+@Entity
+@Table(name = "Movie")
 public class Movie {
 
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(name = "name")
     private String name;
+    @Column(name = "releaseYear")
     private int releaseYear;
-    private int owner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "director_id", referencedColumnName = "id")
+    private Director owner;
+
+    @ManyToMany(mappedBy = "movies")
+    private List<Actor> actors;
 
     public Movie() {
     }
 
-    public Movie(String name, int releaseYear, int owner, int id) {
-        this.id = id;
+    public Movie(String name, int releaseYear) {
         this.name = name;
         this.releaseYear = releaseYear;
-        this.owner = owner;
     }
 
     public int getId() {
@@ -41,11 +58,19 @@ public class Movie {
         this.releaseYear = releaseYear;
     }
 
-    public int getOwner() {
+    public Director getOwner() {
         return owner;
     }
 
-    public void setOwner(int owner) {
+    public void setOwner(Director owner) {
         this.owner = owner;
+    }
+
+    public List<Actor> getActors() {
+        return actors;
+    }
+
+    public void setActors(List<Actor> actors) {
+        this.actors = actors;
     }
 }

@@ -10,7 +10,7 @@
 <ul>
     <c:forEach var="movie" items="${movies}">
         <li>
-            <a href="movieDetails?id=${movie.id}">${movie.name}  (${movie.releaseYear}), id: ${movie.owner}</a>
+            <a href="movieDetails?id=${movie.id}">${movie.name}  (${movie.releaseYear}), id: ${movie.owner.id}</a>
         </li>
     </c:forEach>
 
@@ -21,7 +21,7 @@
         <input type="text" name="releaseYear" placeholder="Release Year"/>
         <input type="text" name="director_id" placeholder="Owner Id"/>
     </label>
-    <button type="submit">Add Course</button>
+    <button type="submit">Add Movie</button>
 </form>
 </body>
 </html>

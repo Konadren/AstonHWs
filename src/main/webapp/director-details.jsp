@@ -32,7 +32,7 @@
     </c:forEach>
 </ul>
 
-<form method="post" action="directorMovies">
+<form method="post" action="directorDetails">
     <!-- Скрытое поле для передачи ID режиссера -->
     <input type="hidden" name="id" value="${directorId}"/>
     <label>

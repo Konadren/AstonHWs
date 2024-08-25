@@ -29,7 +29,7 @@ public class UpdateDirectorServlet extends HttpServlet {
         try {
             directorDAO.updateDirector(director);
             resp.sendRedirect("directorDetails?id=" + id);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException("Database error", e);
         }
     }

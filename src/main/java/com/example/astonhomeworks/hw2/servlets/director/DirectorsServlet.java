@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet("/directors")
@@ -23,7 +22,7 @@ public class DirectorsServlet extends HttpServlet {
             List<Director> directors = directorDAO.getDirectors();
             req.setAttribute("directors", directors);
             req.getRequestDispatcher("directors.jsp").forward(req, resp);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }
@@ -40,7 +39,7 @@ public class DirectorsServlet extends HttpServlet {
         try {
             directorDAO.addDirector(director);
             resp.sendRedirect("directors");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
 

@@ -7,6 +7,12 @@
 <body>
 <h1>Actor Details</h1>
 
+<form method="post" action="deleteActor">
+    <input type="hidden" name="id" value="${actor.id}"/>
+    <button type="submit">Delete actor</button>
+</form>
+
+
 <form method="post" action="actorDetails">
     <input type="hidden" name="id" value="${actor.id}"/>
     <label>

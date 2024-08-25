@@ -3,125 +3,165 @@ package com.example.astonhomeworks.hw2.dao;
 import com.example.astonhomeworks.hw2.models.Actor;
 import com.example.astonhomeworks.hw2.models.Movie;
 import com.example.astonhomeworks.hw2.util.DatabaseUtil;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class MovieDAO {
-    public List<Movie> getAllMovies() throws SQLException {
-        List<Movie> movies = new ArrayList<>();
-        String query = "SELECT * FROM Movie";
+    public List<Movie> getAllMovies() {
+        List<Movie> movies = null;
+        Transaction transaction = null;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
 
-            while (rs.next()) {
-                Movie movie = new Movie();
+            // Насколько я понимаю, при этом запросе должны делаться ещё уйма других запросов
+            // которые будут стягивать режиссёров
+            // но из-за того, что у меня стоит FetchType.LAZY этого не происходит
+            // можно было бы использовать JOIN FETCH, как в DirectorDAO, если бы заместо LAZY был EAGER
+            movies = session.createQuery("FROM Movie", Movie.class).list();
 
-                movie.setId(rs.getInt("id"));
-                movie.setName(rs.getString("name"));
-                movie.setReleaseYear(rs.getInt("releaseYear"));
-                movie.setOwner(rs.getInt("director_id"));
-
-                movies.add(movie);
-            }
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
 
         return movies;
     }
 
-    public void addMovie(Movie movie) throws SQLException {
-        String query = "INSERT INTO Movie (name, releaseYear, director_id) VALUES (?, ?, ?)";
+    public void addMovie(Movie movie) {
+        Transaction transaction = null;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
 
-            pstmt.setString(1, movie.getName());
-            pstmt.setInt(2, movie.getReleaseYear());
-            pstmt.setInt(3, movie.getOwner());
+            session.persist(movie);
 
-            pstmt.executeUpdate();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 
-    public Movie getMovieById(int movieId) throws SQLException {
-        String query = "SELECT * FROM Movie WHERE id=?";
-        Movie movie = new Movie();
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(query)){
-            pstmt.setInt(1, movieId);
-            
-            try (ResultSet rs = pstmt.executeQuery()){
-                while (rs.next()) {
-                    movie.setId(rs.getInt("id"));
-                    movie.setName(rs.getString("name"));
-                    movie.setReleaseYear(rs.getInt("releaseYear"));
-                    movie.setOwner(rs.getInt("director_id"));
-                }
-            } catch (SQLException e) {
-                throw new SQLException(e);
-            }
+    public Movie getMovieById(int movieId) {
+        Transaction transaction = null;
+        Movie movie = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            movie = session.get(Movie.class, movieId);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
+
         return movie;
     }
 
-    public void updateMovie(Movie movie) throws SQLException {
-        String query = "UPDATE Movie SET name = ?, releaseYear = ?, director_id = ? WHERE id = ?";
+    public void updateMovie(Movie movie) {
+        Transaction transaction = null;
 
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
 
-            pstmt.setString(1, movie.getName());
-            pstmt.setInt(2, movie.getReleaseYear());
-            pstmt.setInt(3, movie.getOwner());
-            pstmt.setInt(4, movie.getId());
+            session.merge(movie);
 
-            pstmt.executeUpdate();
-        }
-
-    }
-
-    public void deleteMovie(int movieId) throws SQLException {
-        String query = "DELETE FROM Movie WHERE id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-
-            pstmt.setInt(1, movieId);
-            pstmt.executeUpdate();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
 
-    public List<Actor> getActorsByMovieId(int movieId) throws SQLException {
-        List<Actor> actors = new ArrayList<>();
-        String query = "SELECT Actor.id, Actor.name, Actor.age FROM Actor " +
-                "JOIN Actor_Movie ON Actor.id = Actor_Movie.actor_id " +
-                "WHERE Actor_Movie.movie_id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setInt(1, movieId);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                Actor actor = new Actor();
-                actor.setId(rs.getInt("id"));
-                actor.setName(rs.getString("name"));
-                actor.setAge(rs.getInt("age"));
-                actors.add(actor);
-            }
+    public void deleteMovie(int movieId) {
+        Transaction transaction = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            Movie movie = session.get(Movie.class, movieId);
+            if (movie == null) throw new NoSuchElementException("Фильма с айди = " + movieId + " нет");
+
+            session.remove(movie);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
+    }
+
+    public List<Actor> getActorsByMovieId(int movieId) {
+        Transaction transaction = null;
+        List<Actor> actors = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            // HQL запрос для получения фильмов по ID актера
+            String hqlQuery = "SELECT a FROM Movie m JOIN m.actors a WHERE m.id = :movieId";
+            Query<Actor> query = session.createQuery(hqlQuery, Actor.class);
+            query.setParameter("movieId", movieId);
+
+            actors = query.getResultList();
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
+        }
+
         return actors;
     }
 
-    public void addActorToMovie(int actorId, int movieId) throws SQLException {
-        String query = "INSERT INTO Actor_Movie (actor_id, movie_id) VALUES (?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setInt(1, actorId);
-            pstmt.setInt(2, movieId);
-            pstmt.executeUpdate();
+    public void addActorToMovie(int actorId, int movieId) {
+        Transaction transaction = null;
+
+        try (Session session = DatabaseUtil.getSession()) {
+            transaction = session.beginTransaction();
+
+            Movie movie = session.get(Movie.class, movieId);
+            Actor actor = session.get(Actor.class, actorId);
+
+            if (movie == null) {
+                throw new RuntimeException("Movie with ID " + movieId + " not found.");
+            }
+            if (actor == null) {
+                throw new RuntimeException("Actor with ID " + actorId + " not found.");
+            }
+
+
+            if (movie.getActors().isEmpty()) {
+                movie.setActors(new ArrayList<>(List.of(actor)));
+            } else {
+                movie.getActors().add(actor);
+            }
+
+            if(actor.getMovies().isEmpty()) {
+                actor.setMovies(new ArrayList<>(List.of(movie)));
+            } else {
+                actor.getMovies().add(movie);
+            }
+
+            session.persist(movie);
+
+            transaction.commit();
+        } catch (Exception e) {
+            System.out.println("EXCEPTION");
+            if (transaction != null) transaction.rollback();
+            e.printStackTrace();
         }
     }
+
 
 }

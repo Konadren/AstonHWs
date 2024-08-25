@@ -1,15 +1,35 @@
 package com.example.astonhomeworks.hw2.models;
 
+import jakarta.persistence.*;
+
+import java.util.List;
+
+@Entity
+@Table(name = "Actor")
 public class Actor {
 
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "age")
     private int age;
 
-    public Actor(){}
+    @ManyToMany(cascade = CascadeType.PERSIST)
+    @JoinTable(
+            name = "actor_movie",
+            joinColumns = @JoinColumn(name = "actor_id"),
+            inverseJoinColumns = @JoinColumn(name = "movie_id")
+    )
+    private List<Movie> movies;
 
-    public Actor(int id, String name, int age) {
-        this.id = id;
+    public Actor() {}
+
+    public Actor(String name, int age) {
         this.name = name;
         this.age = age;
     }
@@ -36,5 +56,13 @@ public class Actor {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    public List<Movie> getMovies() {
+        return movies;
+    }
+
+    public void setMovies(List<Movie> movies) {
+        this.movies = movies;
     }
 }
