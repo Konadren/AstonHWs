@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<p th:text="${director.getName()}">VALUE</p>
+<p th:text="${director.getAge()}">VALUE</p>
+<br>
+
+<form th:method="DELETE" th:action="@{/directors/{id}(id=${director.getId()})}">
+    <input type="submit" value="Delete director"/>
+</form>
+
+<!-- Форма для редактирования режиссера -->
+<form th:method="PATCH" th:action="@{/directors/{id}/edit(id=${director.getId()})}"
+      th:object="${director}">
+    <label for="name">Name:</label>
+    <input type="text" id="name" th:field="*{name}" required/>
+    <br/>
+
+    <label for="age">Age:</label>
+    <input type="number" id="age" th:field="*{age}" required/>
+    <br/>
+
+    <input type="submit" value="Edit director"/>
+</form>
+
+
+<div th:if="${!movies.isEmpty()}">
+    <hr>
+    <b>And his movies:</b>
+    <br/>
+    <table th:each="movie: ${movies}">
+        <tr  th:text="${movie.getName() + ', ' + movie.getReleaseYear()}">
+            <form th:method="PATCH" th:action="@{/directors/{id}(id=${director.getId()})}"></form>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

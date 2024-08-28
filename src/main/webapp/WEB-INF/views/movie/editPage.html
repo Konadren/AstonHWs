@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit The Movie</title>
+</head>
+<body>
+
+<form th:method="PATCH" th:action="@{/movies/{id}(id=${movie.getId()})}" th:object="${movie}">
+    <label for="name">Edit movie name:</label>
+    <input th:field="*{name}" type="text" id="name"/>
+    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name error</div>
+
+
+    <br/>
+    <label for="owner">Edit director:</label>
+    <input th:field="*{owner}" type="text" id="owner"/>
+    <div th:if="${#fields.hasErrors('owner')}" th:errors="*{owner}">Owner error</div>
+
+    <br/>
+
+    <label for="releaseYear">Edit release year:</label>
+    <input th:field="*{releaseYear}" type="text" id="releaseYear"/>
+    <div th:if="${#fields.hasErrors('releaseYear')}" th:errors="*{releaseYear}">Release year error</div>
+
+    <br/>
+
+    <input type="submit" value="Edit Movie">
+</form>
+
+</body>
+</html>

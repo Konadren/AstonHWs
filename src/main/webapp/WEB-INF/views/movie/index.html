@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All actors</title>
+</head>
+<body>
+<a href="/movies/newMovie">Add a new movie</a>
+<hr>
+
+<br/>
+
+<div th:each="movie: ${movies}">
+    <a th:href="@{/movies/{id}(id=${movie.getId()})}"
+       th:text="${'Name: ' + movie.getName() + ', director: ' + movie.getOwner().getName() + ', ' + movie.getReleaseYear()}">
+    </a>
+</div>
+
+
+</body>
+</html>

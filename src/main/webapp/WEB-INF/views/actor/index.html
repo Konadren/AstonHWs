@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All books</title>
+</head>
+<body>
+<a href="/actors/newActor">Add a new actor</a>
+<hr>
+
+<br/>
+
+<div th:each="actor: ${actors}">
+    <a th:href="@{/actors/{id}(id=${actor.getId()})}"
+       th:text="${'Name: ' + actor.getName() + ', age: ' + actor.getAge()}"></a>
+</div>
+
+
+</body>
+</html>

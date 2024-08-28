@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Animals List</title>
+</head>
+<body>
+<h1>Animals List</h1>
+
+<a href="/animals/add">Add New Animal</a>
+
+<h2>List of Animals</h2>
+<ul>
+    <li th:each="animal : ${animals}">
+        <a th:href="@{/animals/{id}(id=${animal.id})}" th:text="${animal.name}">Animal Name</a>
+        <span> - <span th:text="${animal.type}">Type</span></span>
+    </li>
+</ul>
+
+</body>
+</html>

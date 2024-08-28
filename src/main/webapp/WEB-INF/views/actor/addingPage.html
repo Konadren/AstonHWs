@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Adding actor page</title>
+</head>
+<body>
+
+<form th:method="POST" th:action="@{/actors/newActor}" th:object="${actor}">
+    <label for="actorName">Enter an actor name: </label>
+    <input th:field="*{name}" type="text" id="actorName"/>
+    <div style="color: red" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name error</div>
+
+    <br/>
+
+    <label for="age">Enter an actor age: </label>
+    <input th:field="*{age}" type="text" id="age"/>
+    <div th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Age error</div>
+
+
+    <br/>
+
+    <input type="submit" value="Add Actor">
+</form>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<form th:method="PATCH" th:action="@{/actors/{id}(id=${actor.getId()})}" th:object="${actor}">
+    <label for="actorName">Edit name:</label>
+    <input th:field="*{name}" type="text" id="actorName"/>
+    <div th:if="${#fields.hasErrors('actorName')}" th:errors="*{name}">Name error</div>
+
+
+    <br/>
+    <label for="age">Edit age:</label>
+    <input th:field="*{age}" type="text" id="age"/>
+    <div th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Age error</div>
+
+    <br/>
+
+    <input type="submit" value="Edit Actor">
+
+</form>
+
+</body>
+</html>

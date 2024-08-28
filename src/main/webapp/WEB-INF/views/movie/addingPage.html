@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Adding movie page</title>
+</head>
+<body>
+
+<form th:method="POST" th:action="@{/movies/newMovie}" th:object="${movie}">
+  <label for="name">Enter a movie name: </label>
+  <input th:field="*{name}" type="text" id="name"/>
+  <div style="color: red" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name error</div>
+
+  <br/>
+
+  <label for="releaseYear">Enter release year: </label>
+  <input th:field="*{releaseYear}" type="text" id="releaseYear"/>
+  <div th:if="${#fields.hasErrors('releaseYear')}" th:errors="*{releaseYear}">Release year error</div>
+
+  <br/>
+
+  <input type="submit" value="Add The Movie">
+</form>
+
+</body>
+</html>

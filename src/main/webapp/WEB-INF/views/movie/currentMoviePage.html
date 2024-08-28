@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<p th:text="${movie.getName()}">VALUE</p>
+<p th:text="${movie.getReleaseYear()}">VALUE</p>
+
+<br>
+
+<form th:method="DELETE" th:action="@{/movies/{id}(id=${movie.getId()})}">
+    <input type="submit" value="Delete movie"/>
+</form>
+
+<br>
+
+<form th:method="PATCH" th:action="@{/movies/{id}(id=${movie.getId()})}" th:object="${movie}">
+    <label for="name">Edit movie name:</label>
+    <input th:field="*{name}" type="text" id="name"/>
+    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name error</div>
+
+
+    <br/>
+    <label for="owner">Edit director:</label>
+    <input th:field="*{owner.id}" type="text" id="owner"/>
+    <div th:if="${#fields.hasErrors('owner.id')}" th:errors="*{owner.id}">Owner error</div>
+
+    <br/>
+
+    <label for="releaseYear">Edit release year:</label>
+    <input th:field="*{releaseYear}" type="text" id="releaseYear"/>
+    <div th:if="${#fields.hasErrors('releaseYear')}" th:errors="*{releaseYear}">Release year error</div>
+
+    <br/>
+
+    <input type="submit" value="Edit Movie">
+</form>
+
+<br>
+
+<form th:method="PATCH" th:action="@{/movies/{id}/addActor(id=${movie.getId()})}">
+    <label for="actor">Choose an actor</label>
+    <select name="actorId" id="actor">
+        <option th:each="actor : ${actors}" th:value="${actor.getId()}" th:text="${actor.getName()}"></option>
+    </select>
+    <input type="submit" value="Add actor to movie"/>
+</form>
+
+
+<div th:if="${!movieActors.isEmpty()}">
+    <hr>
+    <b>Actors in movie:</b>
+    <br/>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Actions</th>
+        </tr>
+        <tr th:each="actor : ${movieActors}">
+            <td th:text="${actor.getName()}"></td>
+            <td th:text="${actor.getAge()}"></td>
+            <td>
+                <form th:method="PATCH" th:action="@{/movies/{id}/removeActor(id=${movie.id})}">
+                    <input type="hidden" name="actorId" th:value="${actor.getId()}"/>
+                    <button type="submit">Remove Actor</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+</body>
+</html>
