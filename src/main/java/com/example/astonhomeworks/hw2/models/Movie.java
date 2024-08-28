@@ -3,7 +3,6 @@ package com.example.astonhomeworks.hw2.models;
 import jakarta.persistence.*;
 
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "Movie")

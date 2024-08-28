@@ -3,159 +3,88 @@ package com.example.astonhomeworks.hw2.dao;
 
 import com.example.astonhomeworks.hw2.models.Movie;
 import com.example.astonhomeworks.hw2.models.Actor;
-import com.example.astonhomeworks.hw2.util.DatabaseUtil;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+@Repository
 public class ActorDAO {
 
+    private final SessionFactory sessionFactory;
+
+    @Autowired
+    public ActorDAO(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
+
+    private Session getCurrentSession() {
+        return sessionFactory.getCurrentSession();
+    }
+
+    @Transactional(readOnly = true)
     public List<Actor> getActors() {
-        List<Actor> actors = null;
-        Transaction transaction;
-
-        try (Session session = DatabaseUtil.getSession()){
-            transaction = session.beginTransaction();
-
-            actors = session.createQuery("FROM Actor", Actor.class).list();
-
-            transaction.commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return actors;
+        return getCurrentSession().createQuery("FROM Actor", Actor.class).list();
     }
 
+    @Transactional
     public void addActor(Actor actor) {
-        Transaction transaction = null;
-
-        try (Session session = DatabaseUtil.getSession()) {
-            transaction = session.beginTransaction();
-
-            session.persist(actor);
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            e.printStackTrace();
-        }
+        getCurrentSession().persist(actor);
     }
 
+    @Transactional(readOnly = true)
     public Actor getActorById(int id) {
-        Transaction transaction = null;
-        Actor actor = null;
-
-        try (Session session = DatabaseUtil.getSession()) {
-            transaction = session.beginTransaction();
-
-            actor = session.get(Actor.class, id);
-            if (actor  == null) throw new NoSuchElementException("Актера с айди = " + id + " не существует в БД");
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            e.printStackTrace();
-        }
-
-        return actor;
+        return getCurrentSession().get(Actor.class, id);
     }
 
+
+    @Transactional
     public void updateActor(Actor actor) {
-        Transaction transaction = null;
+        Actor actorFromDatabase = getCurrentSession().get(Actor.class, actor.getId());
 
-        try (Session session = DatabaseUtil.getSession()) {
-            transaction = session.beginTransaction();
-
-            Actor actorFromDatabase = session.get(Actor.class, actor.getId());
-
-            // если не будет этой конструкции, то актер обновится, но удалится из actor_movie
-            // наверное дело в том, что у actor, поступаемого в метод, не сеттается его movies (=null)
-            // ну и код факапится
-            if (actor.getMovies() == null) {
-                actor.setMovies(actorFromDatabase.getMovies()); // а здесь костыльно мы стягиваем из БД фильмы актера
-            } else {
-                actor.getMovies().addAll(actorFromDatabase.getMovies());
-            }
-
-            session.merge(actor);
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            e.printStackTrace();
+        // если не будет этой конструкции, то актер обновится, но удалится из actor_movie
+        // наверное дело в том, что у actor, поступаемого в метод, не сеттается его movies (=null)
+        // ну и код факапится
+        if (actor.getMovies() == null) {
+            actor.setMovies(actorFromDatabase.getMovies()); // а здесь костыльно мы стягиваем из БД фильмы актера
+        } else {
+            actor.getMovies().addAll(actorFromDatabase.getMovies());
         }
+
+        getCurrentSession().merge(actor);
     }
 
+    @Transactional
     public void deleteActor(int id) {
-        Transaction transaction = null;
+        Actor actor = getCurrentSession().get(Actor.class, id);
 
-        try (Session session = DatabaseUtil.getSession()) {
-            transaction = session.beginTransaction();
+        if (actor == null) throw new NoSuchElementException("Актёра с айди = " + id + " нет в БД");
 
-            Actor actor = session.get(Actor.class, id);
-            if (actor == null) throw new NoSuchElementException("Актёра с айди = " + id + " нет в БД");
-
-            session.remove(actor);
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            e.printStackTrace();
-        }
+        getCurrentSession().remove(actor);
     }
 
+    @Transactional(readOnly = true)
     public List<Movie> getMoviesByActorId(int actorId) {
-        Transaction transaction = null;
-        List<Movie> movies = null;
+        String hqlQuery = "SELECT m FROM Movie m JOIN FETCH m.owner JOIN m.actors a WHERE a.id = :actorId";
+        Query<Movie> query = getCurrentSession().createQuery(hqlQuery, Movie.class);
+        query.setParameter("actorId", actorId);
 
-        try (Session session = DatabaseUtil.getSession()) {
-            transaction = session.beginTransaction();
-
-            String hqlQuery = "SELECT m FROM Movie m JOIN m.actors a WHERE a.id = :actorId";
-            Query<Movie> query = session.createQuery(hqlQuery, Movie.class);
-            query.setParameter("actorId", actorId);
-
-            movies = query.getResultList();
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            e.printStackTrace();
-        }
-
-        return movies;
+        return query.getResultList();
     }
 
-    public void removeActorFromMovie(int actorId, int movieId) {
-        Transaction transaction = null;
+    @Transactional
+    public void removeActorFromMovie(int movieId, int actorId) {
+        Movie movie = getCurrentSession().get(Movie.class, movieId);
+        Actor actor = getCurrentSession().get(Actor.class, actorId);
 
-        try (Session session = DatabaseUtil.getSession()) {
-            transaction = session.beginTransaction();
+        movie.getActors().remove(actor);
+        actor.getMovies().remove(movie);
 
-            Movie movie = session.get(Movie.class, movieId);
-            Actor actor = session.get(Actor.class, actorId);
-
-            if (movie == null) {
-                throw new RuntimeException("Фильма с айди = " + movieId + " не существует в БД.");
-            }
-            if (actor == null) {
-                throw new RuntimeException("Актера с айди =  " + actorId + " не существует в БД.");
-            }
-
-            movie.getActors().remove(actor);
-            actor.getMovies().remove(movie);
-
-            session.merge(movie);
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            e.printStackTrace();
-        }
+        getCurrentSession().merge(movie);
     }
 }

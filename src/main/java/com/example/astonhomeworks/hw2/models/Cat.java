@@ -6,7 +6,7 @@ import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("CAT")
-public class Cat extends AbstractAnimal {
+public class Cat extends Animal {
 
     @Column(name = "hauteurRating")
     private int hauteurRating;

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<p th:text="${actor.getName()}">VALUE</p>
+<p th:text="${actor.getAge()}">VALUE</p>
+<br>
+
+<form th:method="DELETE" th:action="@{/actors/{id}(id=${actor.getId()})}">
+    <input type="submit" value="Delete actor"/>
+</form>
+
+<div th:if="${!movies.isEmpty()}">
+    <hr>
+    <b>Movies:</b>
+    <br/>
+    <table>
+        <tr>
+            <th>Movie Name</th>
+            <th>Director</th>
+            <th>Release Year</th>
+        </tr>
+        <tr th:each="movie : ${movies}">
+            <td th:text="${movie.getName()}"></td>
+            <td th:text="${movie.getOwner() != null ? movie.getOwner().getName() : 'No owner'}"></td>
+            <td th:text="${movie.getReleaseYear()}"></td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

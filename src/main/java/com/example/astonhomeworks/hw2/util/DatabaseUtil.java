@@ -47,6 +47,4 @@ public class DatabaseUtil {
         }
         return session;
     }
-
-
 }

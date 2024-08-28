@@ -13,7 +13,7 @@
         <mapping class="com.example.astonhomeworks.hw2.models.Director" />
         <mapping class="com.example.astonhomeworks.hw2.models.Movie" />
         <mapping class="com.example.astonhomeworks.hw2.models.Actor" />
-        <mapping class="com.example.astonhomeworks.hw2.models.AbstractAnimal" />
+        <mapping class="com.example.astonhomeworks.hw2.models.Animal" />
         <mapping class="com.example.astonhomeworks.hw2.models.Cat" />
         <mapping class="com.example.astonhomeworks.hw2.models.Dog" />
 

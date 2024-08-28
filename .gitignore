@@ -1,4 +1,4 @@
-src/main/resources/hibernate.properties
+src/main/resources/hibernate.cfg.xml
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

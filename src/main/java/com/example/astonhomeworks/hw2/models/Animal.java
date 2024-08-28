@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @Table(name = "animal")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "animal_type")
-public abstract class AbstractAnimal {
+public abstract class Animal {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "animal_seq")
@@ -16,7 +16,7 @@ public abstract class AbstractAnimal {
     @Column(name = "name")
     private String name;
 
-    public AbstractAnimal() {
+    public Animal() {
     }
 
     @Transient

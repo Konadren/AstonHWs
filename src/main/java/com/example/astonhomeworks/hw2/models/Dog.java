@@ -1,13 +1,12 @@
 package com.example.astonhomeworks.hw2.models;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("DOG")
-public class Dog extends AbstractAnimal{
+public class Dog extends Animal {
 
     @Column(name = "loyaltyRating")
     private int loyaltyRating;

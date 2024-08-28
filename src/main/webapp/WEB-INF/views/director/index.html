@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All books</title>
+</head>
+<body>
+<a href="/directors/newDirector">Add a new director</a>
+<hr>
+
+<br/>
+
+<div th:each="director: ${directors}">
+    <a th:href="@{/directors/{id}(id=${director.getId()})}"
+       th:text="${'Name: ' + director.getName() + ', age: ' + director.getAge()}"></a>
+</div>
+
+
+</body>
+</html>
